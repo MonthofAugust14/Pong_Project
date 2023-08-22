@@ -135,6 +135,30 @@ class GameManager:
         window.blit(player_score, player_score_rect)
         window.blit(opponent_score, opponent_score_rect)
 
+class MainMenu():
+    def __init__(self, x, y, script, font, color):
+        self.script = font.render(script, True, color)
+        self.rect = self.script.get_rect(center = (x,y))
+        self.clicked = False
+    
+    def draw(self):
+        action = False
+        #get mouse position
+        pos = pygame.mouse.get_pos()
+        
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                pygame.mixer.Sound.play(score_sound)
+                self.clicked = True
+                action = True       
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+
+        window.blit(self.script, self.rect)
+
+        return action
+    
+
 
 #the first 3 vairables are default. Last variable is the buffer size. Changing this fixes the sound delay caused by the buffer time. Make sure the value is not too small, otherwise the sound is bad.
 pygame.mixer.pre_init(44100, -16, 2, 512)
@@ -154,9 +178,12 @@ bg_color = pygame.Color('#2F373F')
 accent_color = (27,35,43)
 light_grey = (200,200,200)
 game_font = pygame.font.Font("freesansbold.ttf", 32)
+title_font = pygame.font.Font("freesansbold.ttf", 500)
 pong_sound = pygame.mixer.Sound("pong.ogg")
 score_sound = pygame.mixer.Sound("score.ogg")
 middle_strip = pygame.Rect(screen_width/2-2, 0, 4, screen_height)
+menu_screen = True
+play_game = False
 
 #Game Objects
 player = Player('Paddle.png', screen_width -20, screen_height/2,5)
@@ -164,15 +191,37 @@ opponent = Opponent('Paddle.png', 20, screen_width/2,5)
 paddle_group = pygame.sprite.Group()
 paddle_group.add(player)
 paddle_group.add(opponent)
-
 ball = Ball('Ball.png', screen_width/2, screen_height/2,4,4,paddle_group)
 ball_sprite = pygame.sprite.GroupSingle()
 ball_sprite.add(ball)
 
+#Menu Objects
+title = MainMenu(screen_width/2, screen_height/2 - 120, "Pong", title_font, light_grey)
+start_button = MainMenu(screen_width/2, screen_height/2 + 350, "Start", game_font, light_grey)
+exit_button = MainMenu(screen_width/2, screen_height/2 + 400, "Exit", game_font, light_grey)
+
 game_manager = GameManager(ball_sprite, paddle_group)
 
 #Pretty much the "window.Tk() / window.mainloop()"
-while True:
+while menu_screen:
+    window.fill(bg_color)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    title.draw()
+    if start_button.draw():
+        menu_screen = False
+        play_game = True
+    if exit_button.draw():
+        pygame.quit()
+        sys.exit()
+
+    pygame.display.flip()
+    clock.tick(120)
+
+while play_game:
     #input
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -188,6 +237,7 @@ while True:
                 player.movement -= player.speed
             if event.key == pygame.K_UP:
                 player.movement += player.speed
+
 
     #Visuals
     #if the background is not filled we would see the prvious frames
