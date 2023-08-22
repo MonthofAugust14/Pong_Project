@@ -8,18 +8,36 @@ def ball_movement():
 
 # remember to use "<=, >=" over "==" because the object can move just over the number set as the boarder and continue on forever
     if ball.top <= 0 or ball.bottom >= screen_height:
+        pygame.mixer.Sound.play(pong_sound)
         ball_speed_y *= -1
 
     if ball.left <= 0:
+        pygame.mixer.Sound.play(score_sound)
         player_score +=1
         score_time = pygame.time.get_ticks()
 
     if ball.right >= screen_width:
+        pygame.mixer.Sound.play(score_sound)
         opponent_score +=1
         score_time = pygame.time.get_ticks()
     
-    if ball.colliderect(player) or ball.colliderect(opponent):
-        ball_speed_x *= -1
+    if ball.colliderect(player) and ball_speed_x > 0:
+        pygame.mixer.Sound.play(pong_sound)
+        if abs(ball.right - player.left) < 10:
+            ball_speed_x *= -1
+        elif abs(ball.bottom - player.top) < 10 and ball_speed_y > 0:
+            ball_speed_y *= -1
+        elif abs(ball.top - player.bottom) < 10 and ball_speed_y < 0:
+            ball_speed_y *= -1
+
+    if ball.colliderect(opponent) and ball_speed_x < 0:
+        pygame.mixer.Sound.play(pong_sound)
+        if abs(ball.left - opponent.right) < 10:
+            ball_speed_x *= -1
+        elif abs(ball.bottom - opponent.top) < 10 and ball_speed_y > 0:
+            ball_speed_y *= -1
+        elif abs(ball.top - opponent.bottom) < 10 and ball_speed_y < 0:
+            ball_speed_y *= -1
 
 def player_movement():
     player.y += player_speed
@@ -62,6 +80,9 @@ def ball_restart():
         ball_speed_x = 7 * random.choice((1, -1))
         score_time = None
 
+#the first 3 vairables are default. Last variable is the buffer size. Changing this fixes the sound delay caused by the buffer time. Make sure the value is not too small, otherwise the sound is bad.
+pygame.mixer.pre_init(44100, -16, 2, 512)
+
 pygame.init()
 clock = pygame.time.Clock()
 
@@ -90,6 +111,10 @@ opponent_speed = 7
 player_score = 0
 opponent_score = 0
 game_font = pygame.font.Font("freesansbold.ttf", 32)
+
+#sound variables
+pong_sound = pygame.mixer.Sound("pong.ogg")
+score_sound = pygame.mixer.Sound("score.ogg")
 
 #time variables
 score_time = True
